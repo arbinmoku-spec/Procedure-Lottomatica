@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottomatica Procedure & Driver Hub</title>
+    <!-- Font moderno e pulito -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #16a34a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            background-image: radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 80%);
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "LOTTOMATICA";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 12vw;
+            color: rgba(255, 255, 255, 0.025);
+            white-space: nowrap;
+            z-index: -1;
+            pointer-events: none;
+            letter-spacing: 15px;
+            user-select: none;
+        }
+
+        /* Schermata di Autenticazione */
+        #auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-box {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .auth-box h2 {
+            margin-top: 0;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .auth-box p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .auth-error {
+            color: #dc2626;
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #searchInput, #categoryFilter {
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        #searchInput {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        #categoryFilter {
+            min-width: 160px;
+            cursor: pointer;
+        }
+
+        #searchInput::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 11px 18px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary { background-color: #475569; color: white; }
+        .btn-warning { background-color: #d97706; color: white; }
+        .btn-danger { background-color: #dc2626; color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; }
+
+        /* Finestra Modale */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            background: #0f172a;
+            color: var(--text-color);
+        }
+
+        .step-builder-box {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .step-item-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .step-text-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .step-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .step-preview-img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Card della procedura */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .card-title-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .badges-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.15);
+            color: #60a5fa;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            width: fit-content;
+        }
+
+        .driver-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(22, 163, 74, 0.15);
+            color: #4ade80;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(22, 163, 74, 0.3);
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .driver-badge:hover {
+            background: rgba(22, 163, 74, 0.3);
+        }
+
+        .path-group {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            background: rgba(217, 119, 6, 0.15);
+            padding: 2px 6px;
+            border-radius: 20px;
+            border: 1px solid rgba(217, 119, 6, 0.3);
+        }
+
+        .path-badge {
+            background: transparent;
+            color: #fbbf24;
+            padding: 2px 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .path-badge:hover {
+            opacity: 0.8;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Sezione Passaggi a scomparsa */
+        .steps-container {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .steps-container.open {
+            display: flex;
+        }
+
+        .step-card {
+            display: flex;
+            gap: 20px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            align-items: center;
+        }
+
+        .step-text {
+            flex: 1;
+        }
+
+        .step-text h4 {
+            margin: 0 0 5px 0;
+            color: var(--primary-color);
+            font-size: 15px;
+        }
+
+        .step-text p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .step-image {
+            width: 160px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .step-image:hover {
+            transform: scale(1.03);
+            border-color: var(--primary-color);
+        }
+
+        /* Lightbox con Zoom interattivo */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            object-fit: contain;
+            cursor: grab;
+            transform: scale(1);
+            transition: transform 0.1s ease-out;
+            user-select: none;
+        }
+
+        .lightbox img:active {
+            cursor: grabbing;
+        }
+
+        .lightbox-hint {
+            position: absolute;
+            bottom: 20px;
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 600px) {
+            .step-card {
+                flex-direction: column;
+            }
+            .step-image {
+                width: 100%;
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Schermata di Protezione Password -->
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <h2>Area Riservata</h2>
+            <p>Inserisci la password per accedere al Lottomatica Hub</p>
+            <div id="authError" class="auth-error">Password errata. Riprova.</div>
+            <input type="password" id="accessPassword" placeholder="Password..." onkeypress="checkPasswordKey(event)">
+            <button class="btn" style="width: 100%; justify-content: center;" onclick="verifyPassword()">Accedi</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Lottomatica Procedure & Driver Hub</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- Controlli di ricerca e filtri -->
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Cerca una procedura o un driver..." onkeyup="renderCards()">
+            <select id="categoryFilter" onchange="renderCards()">
+                <option value="">Tutte le categorie</option>
+                <option value="Terminali">Terminali</option>
+                <option value="Stampanti">Stampanti</option>
+                <option value="Piattaforme">Piattaforme</option>
+                <option value="Siti online">Siti online</option>
+            </select>
+            <div class="btn-group">
+                <button class="btn" type="button" onclick="openModalForAdd()">+ Nuova</button>
+            </div>
+        </div>
+
+        <div id="cardContainer"></div>
+    </div>
+
+    <!-- Modale Inserimento / Modifica -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Nuova Procedura</h2>
+            <input type="hidden" id="editId">
+            <input type="hidden" id="existingDriverData">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="inputTitle">Titolo della Procedura o Macchina</label>
+                    <input type="text" id="inputTitle" placeholder="Es. Stampante Termica POS o Chiusura cassa">
+                </div>
+                <div class="form-group">
+                    <label for="inputCategory">Categoria</label>
+                    <select id="inputCategory">
+                        <option value="Terminali">Terminali</option>
+                        <option value="Stampanti">Stampanti</option>
+                        <option value="Piattaforme">Piattaforme</option>
+                        <option value="Siti online">Siti online</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Campo per inserire il Driver o Software associato -->
+            <div class="form-group" style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label for="inputDriverFile" style="color: #4ade80; font-weight: 600;">📥 Driver o File Allegato (Opzionale)</label>
+                <input type="file" id="inputDriverFile" style="color: var(--text-muted); margin-top: 5px;">
+                <small id="currentDriverName" style="display: block; margin-top: 5px; color: var(--text-muted);"></small>
+            </div>
+
+            <!-- Campo per inserire il Percorso File / Rete -->
+            <div class="form-group" style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label for="inputFilePath" style="color: #fbbf24; font-weight: 600;">📁 Percorso File o Cartella di Rete (Es. \\server\condivisa\ o C:\Folder)</label>
+                <input type="text" id="inputFilePath" placeholder="Es: \\192.168.1.10\driver\stampante.exe" style="margin-top: 5px;">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+            <label style="font-weight: bold; margin-bottom: 5px; display: block; color: var(--text-muted);">Passaggi in sequenza (Testo + Immagine anche con Ctrl+V):</label>
+            <small style="color: #fbbf24; display: block; margin-bottom: 10px;">💡 Suggerimento: Fai uno screenshot (`Win + Shift + S`) e premi **Ctrl + V** direttamente nel campo di testo del passaggio per incollarlo!</small>
+            
+            <div id="stepsFormContainer" class="step-builder-box">
+                <!-- Dinamico -->
+            </div>
+            <button class="btn btn-small btn-secondary" type="button" onclick="addStepFormInput('', '')">+ Aggiungi Passaggio</button>
+
+            <div class="modal-actions" style="margin-top: 30px;">
+                <button class="btn btn-secondary" type="button" onclick="closeModal()">Annulla</button>
+                <button class="btn" id="saveButton" type="button" onclick="saveItem()">Salva Procedura</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox con Zoom interattivo -->
+    <div class="lightbox" id="imageLightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-container">
+            <img id="lightboxImg" src="" alt="Immagine ingrandita" onclick="event.stopPropagation()">
+            <div class="lightbox-hint">Usa la rotellina per zoomare • Clicca fuori o premi ESC per chiudere</div>
+        </div>
+    </div>
+
+    <script>
+        // === PASSWORD IMPOSTATA ===
+        const CORRECT_PASSWORD = "Lottomatica";
+        // ===========================
+
+        function checkPasswordKey(event) {
+            if (event.key === 'Enter') {
+                verifyPassword();
+            }
+        }
+
+        function verifyPassword() {
+            const passInput = document.getElementById('accessPassword').value;
+            const errorDiv = document.getElementById('authError');
+            if (passInput === CORRECT_PASSWORD) {
+                document.getElementById('auth-overlay').style.display = 'none';
+            } else {
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        const STORAGE_KEY = 'lottomatica_procedure_driver_v14';
+
+        let currentScale = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+
+        function loadItems() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (!data) return getInitialData();
+                return JSON.parse(data);
+            } catch (e) {
+                return getInitialData();
+            }
+        }
+
+        function getInitialData() {
+            return [
+                {
+                    id: 1,
+                    title: "Guida Operativa Iniziale con Driver Hub",
+                    category: "Terminali",
+                    driver: null,
+                    driverName: "",
+                    filePath: "",
+                    steps: [
+                        { text: "Benvenuto nel tuo hub unificato. Qui puoi consultare le guide, scaricare i driver o aprire/copiare i percorsi di rete associati.", image: "" }
+                    ]
+                }
+            ];
+        }
+
+        let items = loadItems();
+        renderCards();
+
+        function renderCards() {
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const selectedCategory = categoryFilter ? categoryFilter.value : '';
+            const container = document.getElementById('cardContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+
+            const filteredItems = items.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchTerm) || 
+                                    (item.driverName && item.driverName.toLowerCase().includes(searchTerm)) ||
+                                    (item.filePath && item.filePath.toLowerCase().includes(searchTerm)) ||
+                                    (item.steps && item.steps.some(s => s.text.toLowerCase().includes(searchTerm)));
+                const matchesCategory = !selectedCategory || item.category === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Nessuna procedura o driver trovato.</p>';
+                return;
+            }
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                let stepsHtml = '';
+                if (item.steps) {
+                    item.steps.forEach((step, index) => {
+                        let imgTag = step.image ? `<img src="${step.image}" class="step-image" alt="Passaggio ${index + 1}" onclick="openLightbox(event, '${step.image}')">` : '';
+                        stepsHtml += `
+                            <div class="step-card">
+                                <div class="step-text">
+                                    <h4>Passaggio ${index + 1}</h4>
+                                    <p>${escapeHtml(step.text)}</p>
+                                </div>
+                                ${imgTag}
+                            </div>
+                        `;
+                    });
+                }
+
+                const category = item.category || 'Terminali';
+                let driverHtml = '';
+                if (item.driver && item.driverName) {
+                    driverHtml = `<a href="${item.driver}" download="${item.driverName}" class="driver-badge" title="Scarica driver o file allegato">📥 ${escapeHtml(item.driverName)}</a>`;
+                }
+
+                let pathHtml = '';
+                if (item.filePath) {
+                    const safePath = escapeHtml(item.filePath);
+                    const fileUrl = item.filePath.startsWith('\\\\') || item.filePath.startsWith('file://') ? item.filePath : 'file:///' + item.filePath.replace(/\\/g, '/');
+                    
+                    pathHtml = `
+                        <div class="path-group">
+                            <a href="${fileUrl}" class="path-badge" title="Tenta di aprire il percorso/file">📁 ${safePath}</a>
+                            <span class="path-badge" data-path="${safePath}" onclick="copyFilePathFromElement(this)" style="border-left: 1px solid rgba(251, 191, 36, 0.3); padding-left: 6px;" title="Copia percorso negli appunti">Copia</span>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="card-header-row">
+                        <div class="card-title-area">
+                            <div class="badges-row">
+                                <span class="category-badge">${escapeHtml(category)}</span>
+                                ${driverHtml}
+                                ${pathHtml}
+                            </div>
+                            <h2>${escapeHtml(item.title)}</h2>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-small" type="button" onclick="toggleSteps(this)">Mostra Procedure</button>
+                            <button class="btn-small btn-warning" type="button" onclick="openModalForEdit(${item.id})">Modifica</button>
+                            <button class="btn-small btn-danger" type="button" onclick="deleteItem(${item.id})">Elimina</button>
+                        </div>
+                    </div>
+                    <div class="steps-container">
+                        ${stepsHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function copyFilePathFromElement(element) {
+            const rawPath = element.getAttribute('data-path');
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(rawPath).catch(() => {
+                    fallbackCopyText(rawPath);
+                });
+            } else {
+                fallbackCopyText(rawPath);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {}
+            document.body.removeChild(textarea);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function toggleSteps(btn) {
+            const card = btn.closest('.card');
+            const stepsContainer = card.querySelector('.steps-container');
+            const isOpen = stepsContainer.classList.toggle('open');
+            btn.innerText = isOpen ? 'Nascondi' : 'Mostra Procedure';
+        }
+
+        function openModalForAdd() {
+            document.getElementById('modalTitle').innerText = 'Nuova Procedura con Driver';
+            document.getElementById('editId').value = '';
+            document.getElementById('inputTitle').value = '';
+            document.getElementById('inputCategory').value = 'Terminali';
+            document.getElementById('inputDriverFile').value = '';
+            document.getElementById('existingDriverData').value = '';
+            document.getElementById('currentDriverName').innerText = '';
+            document.getElementById('inputFilePath').value = '';
+            
+            const stepsContainer = document.getElementById('stepsFormContainer');
+            stepsContainer.innerHTML = '';
+            addStepFormInput('', ''); 
+            
+            document.getElementById('itemModal').classList.add('active');
+        }
+
+        function addStepFormInput(textVal, imageVal) {
+            const container = document.getElementById('stepsFormContainer');
+            const div = document.createElement('div');
+            div.className = 'step-item-form';
+            div.innerHTML = `
+                <textarea placeholder="Descrivi il passaggio o incolla qui lo screenshot (Ctrl+V)..." class="step-text-input" onpaste="handlePasteImage(event, this)">${textVal || ''}</textarea>
+                
+                <div class="step-preview-container">
+                    <img src="${imageVal || ''}" class="step-preview-img" style="${imageVal ? 'display:block;' : ''}" alt="Anteprima">
+                    <div style="flex:1;">
+                        <label style="font-size:12px; color: var(--text-muted); display:block; margin-bottom:2px;">O carica file immagine:</label>
+                        <input type="file" accept="image/*" class="step-image-input" style="color: var(--text-muted); font-size:12px;" onchange="handleFileSelect(event, this)">
+                    </div>
+                    <button class="btn-small btn-danger" type="button" onclick="removeStepItem(this)">Rimuovi Passaggio</button>
+                </div>
+                
+                <input type="hidden" class="step-existing-image" value="${imageVal || ''}">
+            `;
+            container.appendChild(div);
+        }
+
+        async function handlePasteImage(event, textarea) {
+            const itemsList = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (let i = 0; i < itemsList.length; i++) {
+                if (itemsList[i].type.indexOf('image') !== -1) {
+                    event.preventDefault();
+                    const blob = itemsList[i].getAsFile();
+                    const compressedBase64 = await compressImage(blob);
+                    
+                    const formItem = textarea.closest('.step-item-form');
+                    const hiddenInput = formItem.querySelector('.step-existing-image');
+                    const previewImg = formItem.querySelector('.step-preview-img');
+                    
+                    hiddenInput.value = compressedBase64;
+                    previewImg.src = compressedBase64;
+                    previewImg.style.display = 'block';
+                    break;
+                }
+            }
+        }
+
+        async function handleFileSelect(event, fileInput) {
+            const file = fileInput.files[0];
+            if (file) {
+                const compressedBase64 = await compressImage(file);
+                const formItem = fileInput.closest('.step-item-form');
+                const hiddenInput = formItem.querySelector('.step-existing-image');
+                const previewImg = formItem.querySelector('.step-preview-img');
+                
+                hiddenInput.value = compressedBase64;
+                previewImg.src = compressedBase64;
+                previewImg.style.display = 'block';
+            }
+        }
+
+        function removeStepItem(btn) {
+            btn.closest('.step-item-form').remove();
+        }
+
+        function openModalForEdit(id) {
+            const item = items.find(i => Number(i.id) === Number(id));
+            if (!item) return;
+
+            document.getElementById('modalTitle').innerText = 'Modifica Procedura / Driver';
+            document.getElementById('editId').value = item.id;
+            document.getElementById('inputTitle').value = item.title;
+            document.getElementById('inputCategory').value = item.category || 'Terminali';
+            document.getElementById('inputDriverFile').value = '';
+            document.getElementById('existingDriverData').value = item.driver || '';
+            document.getElementById('currentDriverName').innerText = item.driverName ? `File attuale: ${item.driverName}` : 'Nessun file allegato';
+            document.getElementById('inputFilePath').value = item.filePath || '';
+
+            const stepsContainer = document.getElementById('stepsFormContainer');
+            stepsContainer.innerHTML = '';
+
+            if (item.steps && item.steps.length > 0) {
+                item.steps.forEach(step => {
+                    addStepFormInput(step.text, step.image);
+                });
+            } else {
+                addStepFormInput('', '');
+            }
+
+            document.getElementById('itemModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').classList.remove('active');
+        }
+
+        function deleteItem(id) {
+            if (confirm("Sei sicuro di voler eliminare questa procedura?")) {
+                items = items.filter(i => Number(i.id) !== Number(id));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                renderCards();
+            }
+        }
+
+        function compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => resolve(event.target.result);
+                };
+                reader.onerror = () => resolve(null);
+            });
+        }
+
+        async function saveItem() {
+            const editId = document.getElementById('editId').value;
+            const title = document.getElementById('inputTitle').value.trim();
+            const category = document.getElementById('inputCategory').value;
+            const filePath = document.getElementById('inputFilePath').value.trim();
+            
+            if (!title) {
+                alert("Inserisci un titolo per la procedura.");
+                return;
+            }
+
+            const driverFileInput = document.getElementById('inputDriverFile');
+            let driverBase64 = document.getElementById('existingDriverData').value;
+            let driverName = "";
+
+            if (driverFileInput.files.length > 0) {
+                const file = driverFileInput.files[0];
+                driverName = file.name;
+                driverBase64 = await readFileAsDataURL(file);
+            } else if (driverBase64) {
+                const existingItem = items.find(i => Number(i.id) === Number(editId));
+                if (existingItem) driverName = existingItem.driverName;
+            }
+
+            const stepForms = document.querySelectorAll('.step-item-form');
+            const steps = [];
+            stepForms.forEach(form => {
+                const text = form.querySelector('.step-text-input').value.trim();
+                const image = form.querySelector('.step-existing-image').value;
+                if (text || image) {
+                    steps.push({ text, image });
+                }
+            });
+
+            if (editId) {
+                const item = items.find(i => Number(i.id) === Number(editId));
+                if (item) {
+                    item.title = title;
+                    item.category = category;
+                    item.driver = driverBase64;
+                    item.driverName = driverName;
+                    item.filePath = filePath;
+                    item.steps = steps;
+                }
+            } else {
+                const newItem = {
+                    id: Date.now(),
+                    title,
+                    category,
+                    driver: driverBase64,
+                    driverName,
+                    filePath,
+                    steps
+                };
+                items.unshift(newItem);
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            closeModal();
+            renderCards();
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Funzioni per la Lightbox Zoom
+        function openLightbox(event, imgSrc) {
+            event.stopPropagation();
+            const lightbox = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImg');
+            img.src = imgSrc;
+            currentScale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateImageTransform(img);
+            lightbox.classList.add('active');
+        }
+
+        function closeLightbox(event) {
+            document.getElementById('imageLightbox').classList.remove('active');
+        }
+
+        const lightboxImg = document.getElementById('lightboxImg');
+        if (lightboxImg) {
+            lightboxImg.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                if (e.deltaY < 0) {
+                    currentScale += zoomIntensity;
+                } else {
+                    currentScale = Math.max(1, currentScale - zoomIntensity);
+                }
+                updateImageTransform(this);
+            });
+        }
+
+        function updateImageTransform(img) {
+            img.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+        }
+    </script>
+</body>
+</html>
